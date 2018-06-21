@@ -5,6 +5,8 @@ import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firstflutter/edit_mountain.dart';
 import 'package:flutter/material.dart';
 import 'package:firstflutter/database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 void main() => runApp(new MyApp());
 
@@ -29,8 +31,15 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
+class _LoginData {
+  String email = '';
+  String password = '';
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   Query _query;
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+
 
   @override
   void initState() {
@@ -52,6 +61,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ],
     );
+    final Size screenSize = MediaQuery.of(context).size;
+
 
     if (_query != null) {
       body = new TabBarView(children: <Widget>[
@@ -81,11 +92,46 @@ class _MyHomePageState extends State<MyHomePage> {
             );
           },
         ),
-        new RaisedButton(
-          child: new Icon(Icons.accessibility),
-          onPressed: _consoleShowsQuery,
-
-        )
+        new Container(
+            padding: new EdgeInsets.all(20.0),
+            child: new Form(
+              key: this._formKey,
+              child: new ListView(
+                children: <Widget>[
+                  new TextFormField(
+                      keyboardType: TextInputType.emailAddress, // Use email input type for emails.
+                      decoration: new InputDecoration(
+                          hintText: 'you@example.com',
+                          labelText: 'E-mail Address'
+                      )
+                  ),
+                  new TextFormField(
+                      obscureText: true, // Use secure text for passwords.
+                      decoration: new InputDecoration(
+                          hintText: 'Password',
+                          labelText: 'Enter your password'
+                      )
+                  ),
+                  new Container(
+                    width: screenSize.width,
+                    child: new RaisedButton(
+                      child: new Text(
+                        'Login',
+                        style: new TextStyle(
+                            color: Colors.white
+                        ),
+                      ),
+                      onPressed: () => null,
+                      color: Colors.blue,
+                    ),
+                    margin: new EdgeInsets.only(
+                        top: 20.0
+                    ),
+                  )
+                ],
+              ),
+            )
+        ),
       ]);
     }
 
@@ -149,4 +195,13 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
   }
+
+
+  Future<FirebaseUser> _handleSignIn(String username, String password){
+    Future<FirebaseUser> newUser= FirebaseAuth.instance.createUserWithEmailAndPassword(email: username, password: password)
+        .then((user){print("user created: $user");})
+        .catchError((Object error)=>print(error));
+  }
+
 }
+
