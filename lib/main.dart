@@ -39,7 +39,7 @@ class _LoginData {
 class _MyHomePageState extends State<MyHomePage> {
   Query _query;
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
-
+  _LoginData _data = new _LoginData();
 
   @override
   void initState() {
@@ -103,14 +103,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       decoration: new InputDecoration(
                           hintText: 'you@example.com',
                           labelText: 'E-mail Address'
-                      )
+                      ),
+                      onSaved: (String value) {
+                      this._data.email = value;
+                      }
                   ),
                   new TextFormField(
                       obscureText: true, // Use secure text for passwords.
                       decoration: new InputDecoration(
                           hintText: 'Password',
                           labelText: 'Enter your password'
-                      )
+                      ),
+                      onSaved: (String value) {
+                      this._data.password = value;
+                      }
                   ),
                   new Container(
                     width: screenSize.width,
@@ -121,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white
                         ),
                       ),
-                      onPressed: () => null,
+                      onPressed: () => submit(),
                       color: Colors.blue,
                     ),
                     margin: new EdgeInsets.only(
@@ -196,8 +202,19 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void submit() {
+    // First validate form.
+    if (this._formKey.currentState.validate()) {
+      _formKey.currentState.save(); // Save our form now.
 
-  Future<FirebaseUser> _handleSignIn(String username, String password){
+      _handleSignIn(_data.email, _data.password);
+
+      print('Printing the login data.');
+      print('Email: ${_data.email}');
+      print('Password: ${_data.password}');
+    }
+  }
+  void _handleSignIn(String username, String password){
     Future<FirebaseUser> newUser= FirebaseAuth.instance.createUserWithEmailAndPassword(email: username, password: password)
         .then((user){print("user created: $user");})
         .catchError((Object error)=>print(error));
