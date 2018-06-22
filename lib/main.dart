@@ -120,15 +120,32 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   new Container(
                     width: screenSize.width,
-                    child: new RaisedButton(
+                    child:  new Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                    new RaisedButton(
+                    child: new Text(
+                    'Login',
+                      style: new TextStyle(
+                          color: Colors.white
+                      ),
+                    ),
+                    onPressed: () => submit(false),
+                    color: Colors.blue,
+                  ),
+                    new RaisedButton(
                       child: new Text(
-                        'Login',
+                        'Sign Up',
                         style: new TextStyle(
                             color: Colors.white
                         ),
                       ),
-                      onPressed: () => submit(),
-                      color: Colors.blue,
+                      onPressed: () => submit(true),
+                      color: Colors.red,
+                    ),
+
+                      ],
+
                     ),
                     margin: new EdgeInsets.only(
                         top: 20.0
@@ -202,23 +219,22 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void submit() {
+  void submit(bool signUp) {
     // First validate form.
     if (this._formKey.currentState.validate()) {
       _formKey.currentState.save(); // Save our form now.
 
-      _handleSignIn(_data.email, _data.password);
+      if (signUp) {
+        Database.handleSignIn(_data.email, _data.password);
+      }else{
+        Database.handleLogIn(_data.email, _data.password);
+      }
 
-      print('Printing the login data.');
-      print('Email: ${_data.email}');
-      print('Password: ${_data.password}');
+    }else{
+      print("sign up/login failed");
     }
   }
-  void _handleSignIn(String username, String password){
-    Future<FirebaseUser> newUser= FirebaseAuth.instance.createUserWithEmailAndPassword(email: username, password: password)
-        .then((user){print("user created: $user");})
-        .catchError((Object error)=>print(error));
-  }
+
 
 }
 

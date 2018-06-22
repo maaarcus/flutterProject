@@ -1,9 +1,24 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 
 class Database {
+
+  static handleSignIn(String username, String password){
+    Future<FirebaseUser> newUser= FirebaseAuth.instance.createUserWithEmailAndPassword(email: username, password: password)
+        .then((user){print("user created: $user");})
+        .catchError((Object error)=>print(error));
+  }
+
+  static handleLogIn(String email, String password) {
+    FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
+        .then((user){print(user);})
+        .catchError((Object error)=>print(error));
+  }
+
+  FirebaseUser currentUser;
 
   static Future<String> createMountain() async {
     String accountKey = await _getAccountKey();
@@ -123,7 +138,7 @@ class Database {
 }
 
 Future<String> _getAccountKey() async {
-  return '12345678';
+  return FirebaseAuth.instance.currentUser().then((user){return user.uid;});
 }
 
 /// requires: intl: ^0.15.2
@@ -132,3 +147,4 @@ String _getDateNow() {
   var formatter = new DateFormat('yyyy-MM-dd HH:mm:ss');
   return formatter.format(now);
 }
+
