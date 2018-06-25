@@ -10,6 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 void main() => runApp(new MyApp());
 
+
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -38,29 +40,32 @@ class _LoginData {
 
 class _MyHomePageState extends State<MyHomePage> {
   Query _query;
-
+  String loginStatusText;
   Widget userInfoPage;
-  bool _showloginPage;
+  Widget signOutPage;
+  Widget userInfoPageDefault;
+
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   _LoginData _data = new _LoginData();
 
-  @override
-  void initState() {
+  void refreshQuery(){
     Database.queryMountains().then((Query query) {
       setState(() {
         _query = query;
       });
     });
-
-    super.initState();
   }
 
+
+
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    refreshQuery();
+    //final Size screenSize = MediaQuery.of(context).size;
 
-    final Size screenSize = MediaQuery.of(context).size;
-
-    Widget userInfoPageDefault = new Form(
+    loginStatusText = 'Hello there!';
+    userInfoPageDefault = new Form(
       key: this._formKey,
       child: new ListView(
         children: <Widget>[
@@ -85,8 +90,11 @@ class _MyHomePageState extends State<MyHomePage> {
               }
           ),
           new Container(
-            width: screenSize.width,
-            child:  new Row(
+            //width: screenSize.width,
+            child:  new Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              new Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 new RaisedButton(
@@ -96,7 +104,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         color: Colors.white
                     ),
                   ),
-                  onPressed: () => submit("Login"),
+                  onPressed: () {
+                    submit("Login");
+
+                  },
                   color: Colors.blue,
                 ),
                 new RaisedButton(
@@ -111,6 +122,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+              new Padding(
+                padding: new EdgeInsets.all(8.0),
+                child: new Text('$loginStatusText'),
+              ),
+
+
+            ],
+            ),
+
             margin: new EdgeInsets.only(
                 top: 20.0
             ),
@@ -121,38 +141,54 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
-
-
-    FirebaseAuth.instance.currentUser().then((user)=>print("is it ?: $user"));
+    signOutPage=new RaisedButton(
+      child: new Text(
+        'Logout',
+        style: new TextStyle(
+            color: Colors.white
+        ),
+      ),
+      onPressed: (){
+        submit("signOut");
+        setState(() {
+          userInfoPage = userInfoPageDefault;
+          print("set state");
+        });
+      },
+      color: Colors.red,
+    );
 
     FirebaseAuth.instance.currentUser().then((user){
       if(user != null){
         print("trueeeeee");
-        userInfoPage = new RaisedButton(
-          child: new Text(
-            'Logout',
-            style: new TextStyle(
-                color: Colors.white
-            ),
-          ),
-          onPressed: (){
-            submit("signOut");
-            setState(() {
-              userInfoPage = userInfoPageDefault;
-              print("set state");
-            });
-          },
-          color: Colors.red,
-        );
+        setState(() {
+          userInfoPage = signOutPage;
+        });
+      }else{
+        setState(() {
+          userInfoPage = userInfoPageDefault;
+        });
       }
 
     });
 
 
+    super.initState();
+  }
+
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    FirebaseAuth.instance.currentUser().then((user)=>print("is it ?: $user"));
+
+
+
+
 
     Widget listPage = new Text("Your item list is empty");
-
-    FirebaseAuth.instance.currentUser().then((user){return print("current user: ${user.email}");});
 
     if (_query != null) {
       listPage = new FirebaseAnimatedList(
@@ -249,19 +285,17 @@ class _MyHomePageState extends State<MyHomePage> {
         .set(state);
   }
 
-  void _consoleShowsQuery() {
-    Database.queryMountainName("apple").then((result) {
-      result.onValue.listen((event) {
-        Map matchedName = event.snapshot.value as Map;
-        print("matched name: ${matchedName.values}");
-      });
-    });
-  }
+
 
   void submit(String signUp) {
+    //refreshQuery();
 
     if (signUp == "signOut"){
-      FirebaseAuth.instance.signOut();
+      FirebaseAuth.instance.signOut().then((value){
+        setState(() {
+          _query = null;
+        });
+      });
       return;
     }
     // First validate form.
@@ -270,22 +304,27 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (signUp == "signUp") {
         Database.handleSignIn(_data.email, _data.password);
-      }else if (signUp == "Login"){
-        Database.handleLogIn(_data.email, _data.password);
-      }
-      setState(() {
-        Database.queryMountains().then((Query query) {
-          setState(() {
-            _query = query;
-          });
+      } else if (signUp == "Login") {
+        Database.handleLogIn(_data.email, _data.password).then((user) {
+          print("login debug:  heeeeeree");
+
+          if (user != null) {
+            setState(() {
+              userInfoPage = signOutPage;
+            });
+            refreshQuery();
+          } else {
+            setState(() {
+              loginStatusText = 'The account doest not exist / Wrong PW';
+              userInfoPage = userInfoPageDefault;
+            });
+            print("hereherehere1111111  $loginStatusText");
+          }
         });
-      });
-
-    }else{
-      print("sign up/login failed");
+      }
     }
-  }
 
 
+    }
 }
 

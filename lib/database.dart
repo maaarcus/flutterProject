@@ -12,10 +12,10 @@ class Database {
         .catchError((Object error)=>print(error));
   }
 
-  static handleLogIn(String email, String password) {
-    FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
-        .then((user){print(user);})
-        .catchError((Object error)=>print(error));
+  static Future<FirebaseUser> handleLogIn(String email, String password) {
+    return FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
+        .then((user)=>user)
+        .catchError((Object error){print("email is null");});
   }
 
   FirebaseUser currentUser;
@@ -127,7 +127,7 @@ class Database {
 
   static Future<Query> queryMountains() async {
     String accountKey = await _getAccountKey();
-
+    print("account key is: $accountKey");
     return FirebaseDatabase.instance
         .reference()
         .child("accounts")
@@ -139,7 +139,7 @@ class Database {
 }
 
 Future<String> _getAccountKey() async {
-  return FirebaseAuth.instance.currentUser().then((user){return user.uid;});
+  return FirebaseAuth.instance.currentUser().then((user){return user.uid;}).catchError((error){print("uid is null");});
 }
 
 /// requires: intl: ^0.15.2
